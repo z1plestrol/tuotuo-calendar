@@ -616,6 +616,7 @@ function saveTaskFromForm() {
   if (!title || !dayKeys.length) return;
 
   const now = new Date().toISOString();
+  const wasEditing = Boolean(taskEditor.editingId);
   if (taskEditor.editingId) {
     const task = tasks.find((candidate) => candidate.id === taskEditor.editingId);
     if (task) {
@@ -636,7 +637,17 @@ function saveTaskFromForm() {
   }
 
   saveTasks();
-  closeTaskEditor();
+
+  if (wasEditing) {
+    taskEditor.title = title;
+    taskEditor.note = note;
+    taskEditor.selectedKeys = new Set(dayKeys);
+    taskEditor.lastPickedKey = firstSortedKey(dayKeys);
+    render();
+    return;
+  }
+
+  switchToNewTaskMode(new Set(dayKeys));
 }
 
 function deleteEditingTask() {
