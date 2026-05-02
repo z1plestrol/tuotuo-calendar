@@ -3,9 +3,9 @@ const NEW_DAYS_PER_YEAR = 73;
 const GREGORIAN_DAYS_PER_NEW_DAY = 5;
 const TUOTUO_EPOCH_YEAR = 2026;
 const TUOTUO_GROUPS = [
-  { name: "第一组", start: 1, length: 24 },
-  { name: "第二组", start: 25, length: 24 },
-  { name: "第三组", start: 49, length: 25 },
+  { name: "小木", start: 1, length: 24 },
+  { name: "紫叶树", start: 25, length: 24 },
+  { name: "大松树", start: 49, length: 25 },
 ];
 
 const els = {
