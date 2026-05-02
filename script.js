@@ -2,6 +2,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const NEW_DAYS_PER_YEAR = 73;
 const GREGORIAN_DAYS_PER_NEW_DAY = 5;
 const TUOTUO_EPOCH_YEAR = 2026;
+const TASK_STORAGE_KEY = "tuotuo-calendar-tasks-v1";
 const TUOTUO_GROUPS = [
   { name: "小木", start: 1, length: 24 },
   { name: "紫叶树", start: 25, length: 24 },
@@ -23,10 +24,24 @@ const els = {
   nextYear: document.querySelector("#nextYear"),
   yearGrid: document.querySelector("#yearGrid"),
   leapNote: document.querySelector("#leapNote"),
+  taskOverlay: document.querySelector("#taskOverlay"),
+  closeTaskEditor: document.querySelector("#closeTaskEditor"),
+  taskDialogTitle: document.querySelector("#taskDialogTitle"),
+  taskForm: document.querySelector("#taskForm"),
+  taskTitle: document.querySelector("#taskTitle"),
+  taskNote: document.querySelector("#taskNote"),
+  taskDates: document.querySelector("#taskDates"),
+  clearTaskDates: document.querySelector("#clearTaskDates"),
+  taskList: document.querySelector("#taskList"),
+  deleteTask: document.querySelector("#deleteTask"),
+  cancelTask: document.querySelector("#cancelTask"),
+  saveTask: document.querySelector("#saveTask"),
 };
 
 let selectedDate = startOfDay(new Date());
 let viewedYear = selectedDate.getFullYear();
+let tasks = loadTasks();
+let taskEditor = createEmptyTaskEditor();
 
 function startOfDay(date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -85,6 +100,112 @@ function formatCurrentRange(info) {
 
 function groupIndexForDay(day) {
   return TUOTUO_GROUPS.findIndex((group) => day >= group.start && day < group.start + group.length) + 1;
+}
+
+function createEmptyTaskEditor() {
+  return {
+    open: false,
+    editingId: null,
+    selectedKeys: new Set(),
+    lastPickedKey: null,
+    title: "",
+    note: "",
+  };
+}
+
+function loadTasks() {
+  try {
+    const rawTasks = localStorage.getItem(TASK_STORAGE_KEY);
+    if (!rawTasks) return [];
+
+    const parsedTasks = JSON.parse(rawTasks);
+    if (!Array.isArray(parsedTasks)) return [];
+
+    return parsedTasks
+      .map((task) => ({
+        id: typeof task.id === "string" ? task.id : makeTaskId(),
+        title: typeof task.title === "string" ? task.title : "",
+        note: typeof task.note === "string" ? task.note : "",
+        dayKeys: Array.isArray(task.dayKeys) ? task.dayKeys.filter(isValidDayKey) : [],
+        createdAt: typeof task.createdAt === "string" ? task.createdAt : new Date().toISOString(),
+        updatedAt: typeof task.updatedAt === "string" ? task.updatedAt : new Date().toISOString(),
+      }))
+      .filter((task) => task.title.trim() && task.dayKeys.length);
+  } catch {
+    return [];
+  }
+}
+
+function saveTasks() {
+  try {
+    localStorage.setItem(TASK_STORAGE_KEY, JSON.stringify(tasks));
+  } catch {
+    // Browser storage can be disabled; the page still works for the current session.
+  }
+}
+
+function makeTaskId() {
+  if (window.crypto && typeof window.crypto.randomUUID === "function") return window.crypto.randomUUID();
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function dayKey(year, day) {
+  return `${year}-${String(day).padStart(2, "0")}`;
+}
+
+function parseDayKey(key) {
+  const [yearText, dayText] = key.split("-");
+  return {
+    year: Number.parseInt(yearText, 10),
+    day: Number.parseInt(dayText, 10),
+  };
+}
+
+function isValidDayKey(key) {
+  const { year, day } = parseDayKey(key);
+  return Number.isInteger(year) && year > 0 && Number.isInteger(day) && day >= 1 && day <= NEW_DAYS_PER_YEAR;
+}
+
+function compareDayKeys(a, b) {
+  const first = parseDayKey(a);
+  const second = parseDayKey(b);
+  if (first.year !== second.year) return first.year - second.year;
+  return first.day - second.day;
+}
+
+function formatTaskKey(key) {
+  const { year, day } = parseDayKey(key);
+  const start = dateFromDayOfYear(year, (day - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1);
+  const end = dateFromDayOfYear(year, day * GREGORIAN_DAYS_PER_NEW_DAY);
+  return `${formatTuotuoYear(year)} 第${day}日 · ${formatShort(start)}-${formatShort(end)}`;
+}
+
+function summarizeTaskDates(task) {
+  const keys = [...task.dayKeys].sort(compareDayKeys);
+  if (keys.length === 1) return formatTaskKey(keys[0]);
+  if (keys.length === 2) return keys.map(formatTaskKey).join(" / ");
+  return `${formatTaskKey(keys[0])} 等 ${keys.length} 个拖拖日`;
+}
+
+function tasksForDayKey(key) {
+  return tasks.filter((task) => task.dayKeys.includes(key));
+}
+
+function tasksForSelectedDates() {
+  return tasks.filter((task) => task.dayKeys.some((key) => taskEditor.selectedKeys.has(key)));
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (character) => {
+    const entities = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    };
+    return entities[character];
+  });
 }
 
 function convertDate(date) {
@@ -176,12 +297,19 @@ function renderYearGrid(info) {
   for (let day = 1; day <= NEW_DAYS_PER_YEAR; day += 1) {
     const start = dateFromDayOfYear(viewedYear, (day - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1);
     const end = dateFromDayOfYear(viewedYear, day * GREGORIAN_DAYS_PER_NEW_DAY);
+    const key = dayKey(viewedYear, day);
+    const taskCount = tasksForDayKey(key).length;
     const button = document.createElement("button");
     button.type = "button";
     button.className = `day-card is-season-${groupIndexForDay(day)}`;
     button.dataset.day = String(day);
     button.setAttribute("aria-label", `选择${formatTuotuoYear(viewedYear)}第 ${day} 日`);
-    button.innerHTML = `<strong>${day}</strong><span>${formatShort(start)} - ${formatShort(end)}</span>`;
+    button.setAttribute("aria-pressed", taskEditor.open && taskEditor.selectedKeys.has(key) ? "true" : "false");
+    button.innerHTML = `
+      <strong>${day}</strong>
+      <span class="day-range">${formatShort(start)} - ${formatShort(end)}</span>
+      ${taskCount ? `<span class="task-mark" aria-label="${taskCount} 个日程">${taskCount}</span>` : ""}
+    `;
 
     if (!info.leapExtra && info.year === viewedYear && info.newDay === day) {
       button.classList.add("is-selected");
@@ -189,6 +317,14 @@ function renderYearGrid(info) {
 
     if (!todayInfo.leapExtra && todayInfo.year === viewedYear && todayInfo.newDay === day) {
       button.classList.add("is-today");
+    }
+
+    if (taskEditor.open && taskEditor.selectedKeys.has(key)) {
+      button.classList.add("is-editor-picked");
+    }
+
+    if (taskCount) {
+      button.classList.add("has-tasks");
     }
 
     els.yearGrid.append(button);
@@ -205,6 +341,7 @@ function render() {
   renderCurrent(info);
   renderGroups(info);
   renderYearGrid(info);
+  if (taskEditor.open) renderTaskEditor();
 }
 
 function selectDate(date) {
@@ -236,6 +373,183 @@ function shiftNewDay(delta) {
   }
 
   selectDate(dateFromDayOfYear(targetYear, (targetDay - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1));
+}
+
+function syncTaskFields() {
+  if (!taskEditor.open) return;
+  taskEditor.title = els.taskTitle.value;
+  taskEditor.note = els.taskNote.value;
+}
+
+function openTaskEditor(year, day) {
+  const key = dayKey(year, day);
+  taskEditor = createEmptyTaskEditor();
+  taskEditor.open = true;
+  taskEditor.selectedKeys = new Set([key]);
+  taskEditor.lastPickedKey = key;
+  els.taskOverlay.hidden = false;
+  render();
+  requestAnimationFrame(() => els.taskTitle.focus());
+}
+
+function closeTaskEditor() {
+  taskEditor = createEmptyTaskEditor();
+  els.taskOverlay.hidden = true;
+  render();
+}
+
+function pickTaskDay(year, day, extendRange) {
+  syncTaskFields();
+
+  const key = dayKey(year, day);
+  const anchor = taskEditor.lastPickedKey ? parseDayKey(taskEditor.lastPickedKey) : null;
+
+  if (extendRange && anchor && anchor.year === year) {
+    const startDay = Math.min(anchor.day, day);
+    const endDay = Math.max(anchor.day, day);
+    for (let currentDay = startDay; currentDay <= endDay; currentDay += 1) {
+      taskEditor.selectedKeys.add(dayKey(year, currentDay));
+    }
+  } else if (taskEditor.selectedKeys.has(key) && taskEditor.selectedKeys.size > 1) {
+    taskEditor.selectedKeys.delete(key);
+  } else {
+    taskEditor.selectedKeys.add(key);
+  }
+
+  taskEditor.lastPickedKey = key;
+  selectedDate = dateFromDayOfYear(year, (day - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1);
+  viewedYear = year;
+  render();
+}
+
+function renderTaskEditor() {
+  els.taskDialogTitle.textContent = taskEditor.editingId ? "编辑日程" : "新建日程";
+  els.taskTitle.value = taskEditor.title;
+  els.taskNote.value = taskEditor.note;
+  els.deleteTask.hidden = !taskEditor.editingId;
+  renderTaskDates();
+  renderTaskList();
+  updateTaskSaveState();
+}
+
+function renderTaskDates() {
+  const keys = [...taskEditor.selectedKeys].sort(compareDayKeys);
+  els.taskDates.innerHTML = "";
+
+  if (!keys.length) {
+    const empty = document.createElement("div");
+    empty.className = "task-list-empty";
+    empty.textContent = "未选择日期";
+    els.taskDates.append(empty);
+    return;
+  }
+
+  keys.forEach((key) => {
+    const chip = document.createElement("span");
+    chip.className = "date-chip";
+
+    const label = document.createElement("span");
+    label.textContent = formatTaskKey(key);
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.removeDay = key;
+    button.setAttribute("aria-label", `移除${formatTaskKey(key)}`);
+    button.textContent = "×";
+
+    chip.append(label, button);
+    els.taskDates.append(chip);
+  });
+}
+
+function renderTaskList() {
+  const relatedTasks = tasksForSelectedDates().sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  els.taskList.innerHTML = "";
+
+  if (!relatedTasks.length) {
+    const empty = document.createElement("div");
+    empty.className = "task-list-empty";
+    empty.textContent = "暂无日程";
+    els.taskList.append(empty);
+    return;
+  }
+
+  relatedTasks.forEach((task) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "task-row";
+    button.dataset.taskId = task.id;
+    button.innerHTML = `
+      <strong>${escapeHtml(task.title)}</strong>
+      <span>${escapeHtml(summarizeTaskDates(task))}</span>
+      ${task.note ? `<span>${escapeHtml(task.note)}</span>` : ""}
+    `;
+    els.taskList.append(button);
+  });
+}
+
+function updateTaskSaveState() {
+  els.saveTask.disabled = !els.taskTitle.value.trim() || taskEditor.selectedKeys.size === 0;
+}
+
+function startEditingTask(taskId) {
+  const task = tasks.find((candidate) => candidate.id === taskId);
+  if (!task) return;
+
+  const keys = [...task.dayKeys].filter(isValidDayKey).sort(compareDayKeys);
+  const firstKey = keys[0];
+  if (firstKey) {
+    const { year, day } = parseDayKey(firstKey);
+    selectedDate = dateFromDayOfYear(year, (day - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1);
+    viewedYear = year;
+  }
+
+  taskEditor.open = true;
+  taskEditor.editingId = task.id;
+  taskEditor.selectedKeys = new Set(keys);
+  taskEditor.lastPickedKey = firstKey || null;
+  taskEditor.title = task.title;
+  taskEditor.note = task.note;
+  render();
+}
+
+function saveTaskFromForm() {
+  syncTaskFields();
+
+  const title = taskEditor.title.trim();
+  const note = taskEditor.note.trim();
+  const dayKeys = [...taskEditor.selectedKeys].filter(isValidDayKey).sort(compareDayKeys);
+  if (!title || !dayKeys.length) return;
+
+  const now = new Date().toISOString();
+  if (taskEditor.editingId) {
+    const task = tasks.find((candidate) => candidate.id === taskEditor.editingId);
+    if (task) {
+      task.title = title;
+      task.note = note;
+      task.dayKeys = dayKeys;
+      task.updatedAt = now;
+    }
+  } else {
+    tasks.push({
+      id: makeTaskId(),
+      title,
+      note,
+      dayKeys,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  saveTasks();
+  closeTaskEditor();
+}
+
+function deleteEditingTask() {
+  if (!taskEditor.editingId) return;
+  tasks = tasks.filter((task) => task.id !== taskEditor.editingId);
+  saveTasks();
+  closeTaskEditor();
 }
 
 els.dateInput.addEventListener("change", (event) => {
@@ -277,7 +591,13 @@ els.yearGrid.addEventListener("click", (event) => {
   if (!button) return;
 
   const day = Number.parseInt(button.dataset.day, 10);
+  if (taskEditor.open) {
+    pickTaskDay(viewedYear, day, event.shiftKey);
+    return;
+  }
+
   selectDate(dateFromDayOfYear(viewedYear, (day - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1));
+  openTaskEditor(viewedYear, day);
 });
 
 els.groupGrid.addEventListener("click", (event) => {
@@ -286,6 +606,54 @@ els.groupGrid.addEventListener("click", (event) => {
 
   const group = TUOTUO_GROUPS[Number.parseInt(button.dataset.group, 10)];
   selectDate(dateFromDayOfYear(viewedYear, (group.start - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1));
+});
+
+els.taskTitle.addEventListener("input", () => {
+  taskEditor.title = els.taskTitle.value;
+  updateTaskSaveState();
+});
+
+els.taskNote.addEventListener("input", () => {
+  taskEditor.note = els.taskNote.value;
+});
+
+els.taskForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  saveTaskFromForm();
+});
+
+els.closeTaskEditor.addEventListener("click", closeTaskEditor);
+els.cancelTask.addEventListener("click", closeTaskEditor);
+els.deleteTask.addEventListener("click", deleteEditingTask);
+
+els.clearTaskDates.addEventListener("click", () => {
+  syncTaskFields();
+  taskEditor.selectedKeys.clear();
+  render();
+});
+
+els.taskDates.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-remove-day]");
+  if (!button) return;
+
+  syncTaskFields();
+  taskEditor.selectedKeys.delete(button.dataset.removeDay);
+  render();
+});
+
+els.taskList.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-task-id]");
+  if (!button) return;
+
+  startEditingTask(button.dataset.taskId);
+});
+
+els.taskOverlay.addEventListener("click", (event) => {
+  if (event.target === els.taskOverlay) closeTaskEditor();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && taskEditor.open) closeTaskEditor();
 });
 
 render();

@@ -91,6 +91,57 @@
             </div>
           </div>
 
+          <div id="taskOverlay" class="task-overlay" hidden>
+            <section class="task-sheet" role="dialog" aria-modal="false" aria-labelledby="taskDialogTitle">
+              <div class="task-head">
+                <div>
+                  <p class="eyebrow">Task</p>
+                  <h2 id="taskDialogTitle">日程</h2>
+                </div>
+                <button id="closeTaskEditor" class="icon-button" type="button" aria-label="关闭日程">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M18 6 6 18" />
+                    <path d="m6 6 12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form id="taskForm" class="task-form">
+                <div class="task-block">
+                  <label class="task-field">
+                    <span>标题</span>
+                    <input id="taskTitle" type="text" maxlength="80" autocomplete="off" />
+                  </label>
+                  <label class="task-field">
+                    <span>备注</span>
+                    <textarea id="taskNote" rows="3" maxlength="300"></textarea>
+                  </label>
+                </div>
+
+                <div class="task-block">
+                  <div class="task-subhead">
+                    <span>日期</span>
+                    <button id="clearTaskDates" class="ghost-button" type="button">清空</button>
+                  </div>
+                  <div id="taskDates" class="task-date-chips"></div>
+                </div>
+
+                <div class="task-block">
+                  <div class="task-subhead">
+                    <span>已有日程</span>
+                  </div>
+                  <div id="taskList" class="task-list"></div>
+                </div>
+
+                <div class="task-actions">
+                  <button id="deleteTask" class="danger-button" type="button" hidden>删除</button>
+                  <button id="cancelTask" class="text-button" type="button">取消</button>
+                  <button id="saveTask" class="primary-button" type="submit">保存</button>
+                </div>
+              </form>
+            </section>
+          </div>
+
           <div id="yearGrid" class="year-grid" aria-label="73 个拖拖日网格"></div>
           <div id="leapNote" class="leap-note"></div>
         </section>
