@@ -1,0 +1,485 @@
+:root {
+  color-scheme: light;
+  --ink: #17201d;
+  --muted: #66706b;
+  --paper: #fbfcf9;
+  --panel: #ffffff;
+  --line: #d9dfd8;
+  --teal: #0f766e;
+  --blue: #2563eb;
+  --rose: #d94672;
+  --gold: #eab308;
+  --green: #16a34a;
+  --shadow: 0 18px 55px rgba(23, 32, 29, 0.11);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: var(--ink);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background:
+    radial-gradient(circle at 8% 10%, rgba(22, 163, 74, 0.14), transparent 28rem),
+    radial-gradient(circle at 95% 4%, rgba(217, 70, 114, 0.13), transparent 26rem),
+    linear-gradient(135deg, #f8faf7 0%, #eef6f3 50%, #f7f8fb 100%);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.app-shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0 42px;
+}
+
+.masthead {
+  display: flex;
+  min-height: 112px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px 0 18px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--teal);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 0;
+  font-size: clamp(2.35rem, 6vw, 5.2rem);
+  line-height: 0.95;
+}
+
+h2 {
+  margin-bottom: 0;
+  font-size: 1.65rem;
+  line-height: 1.1;
+}
+
+.rule-stack {
+  display: grid;
+  min-width: min(100%, 310px);
+  gap: 8px;
+}
+
+.rule-stack span {
+  border-left: 4px solid var(--gold);
+  padding: 8px 0 8px 12px;
+  color: #24322d;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.control-band,
+.group-panel,
+.year-panel {
+  border: 1px solid rgba(217, 223, 216, 0.92);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.control-band {
+  display: grid;
+  grid-template-columns: minmax(410px, 50%) minmax(0, 1fr);
+  align-items: center;
+  gap: 0;
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.date-controls {
+  display: grid;
+  width: min(100%, 260px);
+  justify-self: start;
+  margin-left: clamp(145px, 18vw, 190px);
+  gap: 12px;
+}
+
+.field,
+.year-field {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.field {
+  width: 100%;
+}
+
+.field input,
+.year-field input {
+  width: 100%;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+  color: var(--ink);
+  background: #fff;
+  font-weight: 750;
+  outline: none;
+}
+
+.field input:focus,
+.year-field input:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+}
+
+.button-row {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  gap: 10px;
+}
+
+.year-controls {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+}
+
+.icon-button,
+.text-button {
+  display: inline-flex;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: #fff;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.icon-button {
+  width: 44px;
+  flex: 0 0 44px;
+}
+
+.text-button {
+  gap: 8px;
+  min-width: 98px;
+  padding: 0 14px;
+  font-weight: 850;
+}
+
+.icon-button:hover,
+.text-button:hover,
+.day-card:hover {
+  border-color: rgba(15, 118, 110, 0.55);
+  background: #f1fbf7;
+  transform: translateY(-1px);
+}
+
+.current-reading {
+  min-width: 0;
+  border-left: 1px solid var(--line);
+  padding-left: clamp(24px, 4vw, 64px);
+}
+
+.current-reading strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: clamp(2rem, 4.2vw, 3.25rem);
+  font-weight: 760;
+  line-height: 1.02;
+}
+
+.current-reading span {
+  display: block;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.workspace-grid {
+  display: block;
+  margin-top: 18px;
+}
+
+.group-panel {
+  margin-top: 18px;
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.year-panel {
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.panel-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.compact-head {
+  margin-bottom: 14px;
+}
+
+.year-field {
+  width: 118px;
+}
+
+.group-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.group-card {
+  --group-color: var(--teal);
+  display: grid;
+  min-height: 128px;
+  align-content: space-between;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  color: var(--ink);
+  background: #fff;
+  text-align: left;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.group-card:hover {
+  border-color: color-mix(in srgb, var(--group-color) 48%, var(--line));
+  background: #f7fbfa;
+  transform: translateY(-1px);
+}
+
+.group-card.is-group-1 {
+  --group-color: var(--teal);
+}
+
+.group-card.is-group-2 {
+  --group-color: var(--blue);
+}
+
+.group-card.is-group-3 {
+  --group-color: var(--green);
+}
+
+.group-card.is-active {
+  border-color: color-mix(in srgb, var(--group-color) 58%, var(--line));
+  background: color-mix(in srgb, var(--group-color) 8%, #fff);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--group-color) 28%, transparent);
+}
+
+.group-name,
+.group-status {
+  color: var(--group-color);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.group-card strong {
+  display: block;
+  margin: 10px 0 6px;
+  font-size: clamp(1.35rem, 2.4vw, 1.85rem);
+  line-height: 1.05;
+}
+
+.group-range {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 760;
+}
+
+.year-grid {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.day-card {
+  display: grid;
+  min-height: 76px;
+  align-content: space-between;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px;
+  color: var(--ink);
+  background: #fff;
+  text-align: left;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.day-card strong {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.day-card span {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 780;
+  line-height: 1.25;
+}
+
+.day-card.is-selected {
+  border-color: rgba(217, 70, 114, 0.62);
+  background: #fff0f4;
+}
+
+.day-card.is-today {
+  box-shadow: inset 0 0 0 2px rgba(37, 99, 235, 0.34);
+}
+
+.day-card.is-season-1 strong {
+  color: var(--teal);
+}
+
+.day-card.is-season-2 strong {
+  color: var(--blue);
+}
+
+.day-card.is-season-3 strong {
+  color: var(--green);
+}
+
+.leap-note {
+  margin-top: 14px;
+  border-left: 4px solid var(--gold);
+  padding: 10px 12px;
+  color: #39443f;
+  background: #fff9db;
+  font-size: 0.92rem;
+  font-weight: 720;
+}
+
+@media (max-width: 920px) {
+  .masthead,
+  .panel-head {
+    align-items: stretch;
+  }
+
+  .masthead,
+  .panel-head {
+    flex-direction: column;
+  }
+
+  .year-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .group-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .control-band {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .current-reading {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+    padding-left: 0;
+  }
+
+  .date-controls {
+    justify-self: stretch;
+    width: min(100%, 310px);
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  .app-shell {
+    width: min(100% - 22px, 1180px);
+    padding-top: 16px;
+  }
+
+  .year-controls {
+    display: grid;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .year-field {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .year-field {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  #prevYear {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+  }
+
+  #nextYear {
+    grid-column: 2;
+    grid-row: 2;
+    width: 100%;
+  }
+
+  .year-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
