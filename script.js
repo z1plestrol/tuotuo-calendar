@@ -122,6 +122,7 @@ function createEmptyTaskEditor() {
     open: false,
     editingId: null,
     selectedKeys: new Set(),
+    draftKeys: new Set(),
     lastPickedKey: null,
     title: "",
     note: "",
@@ -186,6 +187,14 @@ function compareDayKeys(a, b) {
   const second = parseDayKey(b);
   if (first.year !== second.year) return first.year - second.year;
   return first.day - second.day;
+}
+
+function cloneDayKeys(keys) {
+  return new Set([...keys].filter(isValidDayKey));
+}
+
+function firstSortedKey(keys) {
+  return [...keys].sort(compareDayKeys)[0] || null;
 }
 
 function formatTaskKey(key) {
@@ -435,6 +444,7 @@ function openTaskEditor(year, day) {
   taskEditor = createEmptyTaskEditor();
   taskEditor.open = true;
   taskEditor.selectedKeys = new Set([key]);
+  taskEditor.draftKeys = new Set([key]);
   taskEditor.lastPickedKey = key;
   els.taskOverlay.hidden = false;
   render();
@@ -469,11 +479,14 @@ function pickTaskDay(year, day, extendRange) {
   selectedDate = dateFromDayOfYear(year, (day - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1);
   viewedYear = year;
   viewedGroupIndex = groupIndexForDay(day) - 1;
+  if (!taskEditor.editingId) {
+    taskEditor.draftKeys = cloneDayKeys(taskEditor.selectedKeys);
+  }
   render();
 }
 
 function renderTaskEditor() {
-  els.taskDialogTitle.textContent = taskEditor.editingId ? "编辑日程" : "新建日程";
+  els.taskDialogTitle.textContent = taskEditor.editingId ? "日程详情" : "新建日程";
   els.taskTitle.value = taskEditor.title;
   els.taskNote.value = taskEditor.note;
   els.deleteTask.hidden = !taskEditor.editingId;
@@ -525,10 +538,12 @@ function renderTaskList() {
   }
 
   relatedTasks.forEach((task) => {
+    const isEditing = taskEditor.editingId === task.id;
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "task-row";
+    button.className = `task-row${isEditing ? " is-active" : ""}`;
     button.dataset.taskId = task.id;
+    button.setAttribute("aria-pressed", isEditing ? "true" : "false");
     button.innerHTML = `
       <strong>${escapeHtml(task.title)}</strong>
       <span>${escapeHtml(summarizeTaskDates(task))}</span>
@@ -542,9 +557,37 @@ function updateTaskSaveState() {
   els.saveTask.disabled = !els.taskTitle.value.trim() || taskEditor.selectedKeys.size === 0;
 }
 
+function switchToNewTaskMode(keys = taskEditor.draftKeys) {
+  const nextKeys = cloneDayKeys(keys);
+  if (!nextKeys.size) {
+    const info = convertDate(selectedDate);
+    if (!info.leapExtra) {
+      nextKeys.add(dayKey(info.year, info.newDay));
+    }
+  }
+
+  taskEditor.editingId = null;
+  taskEditor.selectedKeys = nextKeys;
+  taskEditor.draftKeys = cloneDayKeys(nextKeys);
+  taskEditor.lastPickedKey = firstSortedKey(nextKeys);
+  taskEditor.title = "";
+  taskEditor.note = "";
+  render();
+  requestAnimationFrame(() => els.taskTitle.focus());
+}
+
 function startEditingTask(taskId) {
+  if (taskEditor.editingId === taskId) {
+    switchToNewTaskMode();
+    return;
+  }
+
   const task = tasks.find((candidate) => candidate.id === taskId);
   if (!task) return;
+
+  if (!taskEditor.editingId) {
+    taskEditor.draftKeys = cloneDayKeys(taskEditor.selectedKeys);
+  }
 
   const keys = [...task.dayKeys].filter(isValidDayKey).sort(compareDayKeys);
   const firstKey = keys[0];
@@ -688,6 +731,9 @@ els.deleteTask.addEventListener("click", deleteEditingTask);
 els.clearTaskDates.addEventListener("click", () => {
   syncTaskFields();
   taskEditor.selectedKeys.clear();
+  if (!taskEditor.editingId) {
+    taskEditor.draftKeys.clear();
+  }
   render();
 });
 
@@ -697,6 +743,9 @@ els.taskDates.addEventListener("click", (event) => {
 
   syncTaskFields();
   taskEditor.selectedKeys.delete(button.dataset.removeDay);
+  if (!taskEditor.editingId) {
+    taskEditor.draftKeys = cloneDayKeys(taskEditor.selectedKeys);
+  }
   render();
 });
 
