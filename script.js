@@ -18,6 +18,10 @@ const els = {
   currentTitle: document.querySelector("#currentTitle"),
   currentRange: document.querySelector("#currentRange"),
   groupGrid: document.querySelector("#groupGrid"),
+  seasonTitle: document.querySelector("#seasonTitle"),
+  seasonGrid: document.querySelector("#seasonGrid"),
+  toggleYearView: document.querySelector("#toggleYearView"),
+  yearToggleText: document.querySelector("#yearToggleText"),
   yearTitle: document.querySelector("#yearTitle"),
   yearInput: document.querySelector("#yearInput"),
   prevYear: document.querySelector("#prevYear"),
@@ -40,6 +44,8 @@ const els = {
 
 let selectedDate = startOfDay(new Date());
 let viewedYear = selectedDate.getFullYear();
+let viewedGroupIndex = 0;
+let yearExpanded = false;
 let tasks = loadTasks();
 let taskEditor = createEmptyTaskEditor();
 
@@ -100,6 +106,15 @@ function formatCurrentRange(info) {
 
 function groupIndexForDay(day) {
   return TUOTUO_GROUPS.findIndex((group) => day >= group.start && day < group.start + group.length) + 1;
+}
+
+function groupIndexForInfo(info) {
+  if (info.leapExtra || !info.newDay) return 0;
+  return groupIndexForDay(info.newDay) - 1;
+}
+
+function getViewedGroup() {
+  return TUOTUO_GROUPS[viewedGroupIndex] || TUOTUO_GROUPS[0];
 }
 
 function createEmptyTaskEditor() {
@@ -270,9 +285,10 @@ function renderGroups(info) {
     const endDay = group.start + group.length - 1;
     const startDate = dateFromDayOfYear(viewedYear, (group.start - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1);
     const endDate = dateFromDayOfYear(viewedYear, endDay * GREGORIAN_DAYS_PER_NEW_DAY);
-    const isActive =
+    const selectedInGroup =
       !info.leapExtra && info.year === viewedYear && info.newDay >= group.start && info.newDay <= endDay;
-    const activeText = isActive ? `当前 · 第${info.newDay - group.start + 1}/${group.length}日` : `${group.length}天`;
+    const isActive = selectedInGroup || (!selectedInGroup && index === viewedGroupIndex);
+    const activeText = selectedInGroup ? `当前 · 第${info.newDay - group.start + 1}/${group.length}日` : `${group.length}天`;
     const button = document.createElement("button");
     button.type = "button";
     button.className = `group-card is-group-${index + 1}${isActive ? " is-active" : ""}`;
@@ -288,46 +304,76 @@ function renderGroups(info) {
   });
 }
 
+function createDayCard(day, info, todayInfo) {
+  const start = dateFromDayOfYear(viewedYear, (day - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1);
+  const end = dateFromDayOfYear(viewedYear, day * GREGORIAN_DAYS_PER_NEW_DAY);
+  const key = dayKey(viewedYear, day);
+  const taskCount = tasksForDayKey(key).length;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = `day-card is-season-${groupIndexForDay(day)}`;
+  button.dataset.day = String(day);
+  button.setAttribute("aria-label", `选择${formatTuotuoYear(viewedYear)}第 ${day} 日`);
+  button.setAttribute("aria-pressed", taskEditor.open && taskEditor.selectedKeys.has(key) ? "true" : "false");
+  button.innerHTML = `
+    <strong>${day}</strong>
+    <span class="day-range">${formatShort(start)} - ${formatShort(end)}</span>
+    ${taskCount ? `<span class="task-mark" aria-label="${taskCount} 个日程">${taskCount}</span>` : ""}
+  `;
+
+  if (!info.leapExtra && info.year === viewedYear && info.newDay === day) {
+    button.classList.add("is-selected");
+  }
+
+  if (!todayInfo.leapExtra && todayInfo.year === viewedYear && todayInfo.newDay === day) {
+    button.classList.add("is-today");
+  }
+
+  if (taskEditor.open && taskEditor.selectedKeys.has(key)) {
+    button.classList.add("is-editor-picked");
+  }
+
+  if (taskCount) {
+    button.classList.add("has-tasks");
+  }
+
+  return button;
+}
+
+function renderSeasonGrid(info) {
+  const group = getViewedGroup();
+  const endDay = group.start + group.length - 1;
+  const todayInfo = convertDate(new Date());
+  els.seasonTitle.textContent = `${formatTuotuoYear(viewedYear)} · ${group.name}`;
+  els.seasonGrid.setAttribute("aria-label", `${formatTuotuoYear(viewedYear)}${group.name}拖拖日网格`);
+  els.seasonGrid.innerHTML = "";
+
+  for (let day = group.start; day <= endDay; day += 1) {
+    els.seasonGrid.append(createDayCard(day, info, todayInfo));
+  }
+}
+
 function renderYearGrid(info) {
   els.yearTitle.textContent = formatTuotuoYear(viewedYear);
   els.yearInput.value = viewedYear;
+  els.toggleYearView.setAttribute("aria-expanded", yearExpanded ? "true" : "false");
+  els.toggleYearView.classList.toggle("is-expanded", yearExpanded);
+  els.yearToggleText.textContent = yearExpanded ? "collapse" : "expand";
+
+  if (!yearExpanded) {
+    els.yearGrid.hidden = true;
+    els.leapNote.hidden = true;
+    els.yearGrid.innerHTML = "";
+    return;
+  }
+
+  els.yearGrid.hidden = false;
+  els.leapNote.hidden = false;
   els.yearGrid.innerHTML = "";
 
   const todayInfo = convertDate(new Date());
   for (let day = 1; day <= NEW_DAYS_PER_YEAR; day += 1) {
-    const start = dateFromDayOfYear(viewedYear, (day - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1);
-    const end = dateFromDayOfYear(viewedYear, day * GREGORIAN_DAYS_PER_NEW_DAY);
-    const key = dayKey(viewedYear, day);
-    const taskCount = tasksForDayKey(key).length;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = `day-card is-season-${groupIndexForDay(day)}`;
-    button.dataset.day = String(day);
-    button.setAttribute("aria-label", `选择${formatTuotuoYear(viewedYear)}第 ${day} 日`);
-    button.setAttribute("aria-pressed", taskEditor.open && taskEditor.selectedKeys.has(key) ? "true" : "false");
-    button.innerHTML = `
-      <strong>${day}</strong>
-      <span class="day-range">${formatShort(start)} - ${formatShort(end)}</span>
-      ${taskCount ? `<span class="task-mark" aria-label="${taskCount} 个日程">${taskCount}</span>` : ""}
-    `;
-
-    if (!info.leapExtra && info.year === viewedYear && info.newDay === day) {
-      button.classList.add("is-selected");
-    }
-
-    if (!todayInfo.leapExtra && todayInfo.year === viewedYear && todayInfo.newDay === day) {
-      button.classList.add("is-today");
-    }
-
-    if (taskEditor.open && taskEditor.selectedKeys.has(key)) {
-      button.classList.add("is-editor-picked");
-    }
-
-    if (taskCount) {
-      button.classList.add("has-tasks");
-    }
-
-    els.yearGrid.append(button);
+    els.yearGrid.append(createDayCard(day, info, todayInfo));
   }
 
   els.leapNote.textContent = isLeapYear(viewedYear)
@@ -340,6 +386,7 @@ function render() {
   els.dateInput.value = toInputDate(selectedDate);
   renderCurrent(info);
   renderGroups(info);
+  renderSeasonGrid(info);
   renderYearGrid(info);
   if (taskEditor.open) renderTaskEditor();
 }
@@ -347,6 +394,8 @@ function render() {
 function selectDate(date) {
   selectedDate = startOfDay(date);
   viewedYear = selectedDate.getFullYear();
+  const info = convertDate(selectedDate);
+  viewedGroupIndex = info.leapExtra ? TUOTUO_GROUPS.length - 1 : groupIndexForInfo(info);
   render();
 }
 
@@ -419,6 +468,7 @@ function pickTaskDay(year, day, extendRange) {
   taskEditor.lastPickedKey = key;
   selectedDate = dateFromDayOfYear(year, (day - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1);
   viewedYear = year;
+  viewedGroupIndex = groupIndexForDay(day) - 1;
   render();
 }
 
@@ -502,6 +552,7 @@ function startEditingTask(taskId) {
     const { year, day } = parseDayKey(firstKey);
     selectedDate = dateFromDayOfYear(year, (day - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1);
     viewedYear = year;
+    viewedGroupIndex = groupIndexForDay(day) - 1;
   }
 
   taskEditor.open = true;
@@ -586,7 +637,7 @@ els.yearInput.addEventListener("change", (event) => {
   render();
 });
 
-els.yearGrid.addEventListener("click", (event) => {
+function handleDayGridClick(event) {
   const button = event.target.closest(".day-card");
   if (!button) return;
 
@@ -598,6 +649,14 @@ els.yearGrid.addEventListener("click", (event) => {
 
   selectDate(dateFromDayOfYear(viewedYear, (day - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1));
   openTaskEditor(viewedYear, day);
+}
+
+els.seasonGrid.addEventListener("click", handleDayGridClick);
+els.yearGrid.addEventListener("click", handleDayGridClick);
+
+els.toggleYearView.addEventListener("click", () => {
+  yearExpanded = !yearExpanded;
+  render();
 });
 
 els.groupGrid.addEventListener("click", (event) => {
@@ -656,4 +715,6 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && taskEditor.open) closeTaskEditor();
 });
 
+const initialInfo = convertDate(selectedDate);
+viewedGroupIndex = initialInfo.leapExtra ? TUOTUO_GROUPS.length - 1 : groupIndexForInfo(initialInfo);
 render();

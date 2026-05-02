@@ -392,10 +392,69 @@ h2 {
   font-weight: 760;
 }
 
+.season-grid,
 .year-grid {
   display: grid;
-  grid-template-columns: repeat(10, minmax(0, 1fr));
   gap: 8px;
+}
+
+.season-grid {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+
+.year-grid {
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  margin-top: 10px;
+}
+
+.year-expand-button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 13px 14px;
+  color: var(--ink);
+  background: #fff;
+  text-align: left;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.year-expand-button:hover {
+  border-color: rgba(15, 118, 110, 0.55);
+  background: #f1fbf7;
+  transform: translateY(-1px);
+}
+
+.year-expand-button .eyebrow {
+  margin-bottom: 4px;
+}
+
+.year-expand-button strong {
+  display: block;
+  font-size: 1.18rem;
+  line-height: 1.1;
+}
+
+.expand-label {
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  border-radius: 999px;
+  padding: 7px 12px;
+  color: var(--teal);
+  background: #eef9f5;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.year-expand-button.is-expanded .expand-label {
+  color: var(--rose);
+  background: #fff1f5;
 }
 
 .day-card {
@@ -664,6 +723,7 @@ h2 {
     flex-direction: column;
   }
 
+  .season-grid,
   .year-grid {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
@@ -732,6 +792,7 @@ h2 {
     width: 100%;
   }
 
+  .season-grid,
   .year-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

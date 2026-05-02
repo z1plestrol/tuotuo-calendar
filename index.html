@@ -70,8 +70,8 @@
         <section class="year-panel" aria-label="拖拖历年度">
           <div class="panel-head">
             <div>
-              <p class="eyebrow">Year View</p>
-              <h2 id="yearTitle">--</h2>
+              <p class="eyebrow">Season View</p>
+              <h2 id="seasonTitle">--</h2>
             </div>
             <div class="year-controls">
               <button id="prevYear" class="icon-button" type="button" aria-label="上一年">
@@ -142,7 +142,23 @@
             </section>
           </div>
 
-          <div id="yearGrid" class="year-grid" aria-label="73 个拖拖日网格"></div>
+          <div id="seasonGrid" class="season-grid" aria-label="当前花季拖拖日网格"></div>
+
+          <button
+            id="toggleYearView"
+            class="year-expand-button"
+            type="button"
+            aria-expanded="false"
+            aria-controls="yearGrid"
+          >
+            <span>
+              <span class="eyebrow">Year View</span>
+              <strong id="yearTitle">--</strong>
+            </span>
+            <span id="yearToggleText" class="expand-label">expand</span>
+          </button>
+
+          <div id="yearGrid" class="year-grid full-year-grid" aria-label="73 个拖拖日网格" hidden></div>
           <div id="leapNote" class="leap-note"></div>
         </section>
       </section>
