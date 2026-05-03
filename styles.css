@@ -407,18 +407,46 @@ h2 {
   margin-top: 10px;
 }
 
-.year-expand-button {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+.year-view-module {
   margin-top: 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 13px 14px;
-  color: var(--ink);
+  padding: 12px;
   background: #fff;
+}
+
+.year-module-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+}
+
+.year-view-title {
+  min-width: 0;
+}
+
+.year-view-title .eyebrow {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.year-view-title strong {
+  display: block;
+  font-size: 1.18rem;
+  line-height: 1.1;
+}
+
+.year-expand-button {
+  display: inline-flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--ink);
+  background: transparent;
   text-align: left;
   transition:
     transform 0.16s ease,
@@ -427,19 +455,8 @@ h2 {
 }
 
 .year-expand-button:hover {
-  border-color: rgba(15, 118, 110, 0.55);
   background: #f1fbf7;
   transform: translateY(-1px);
-}
-
-.year-expand-button .eyebrow {
-  margin-bottom: 4px;
-}
-
-.year-expand-button strong {
-  display: block;
-  font-size: 1.18rem;
-  line-height: 1.1;
 }
 
 .expand-label {
@@ -732,6 +749,24 @@ h2 {
   .season-grid,
   .year-grid {
     grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .year-module-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .year-view-title {
+    grid-column: 1 / -1;
+  }
+
+  .year-controls {
+    grid-column: 1;
+    justify-self: stretch;
+  }
+
+  .year-expand-button {
+    grid-column: 2;
+    align-self: end;
   }
 }
 

@@ -73,22 +73,6 @@
               <p class="eyebrow">Season View</p>
               <h2 id="seasonTitle">--</h2>
             </div>
-            <div class="year-controls">
-              <button id="prevYear" class="icon-button" type="button" aria-label="上一年">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M15 18l-6-6 6-6" />
-                </svg>
-              </button>
-              <label class="year-field">
-                <span>公历年份</span>
-                <input id="yearInput" type="number" min="1" inputmode="numeric" />
-              </label>
-              <button id="nextYear" class="icon-button" type="button" aria-label="下一年">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              </button>
-            </div>
           </div>
 
           <div id="taskOverlay" class="task-overlay" hidden>
@@ -144,22 +128,44 @@
 
           <div id="seasonGrid" class="season-grid" aria-label="当前花季拖拖日网格"></div>
 
-          <button
-            id="toggleYearView"
-            class="year-expand-button"
-            type="button"
-            aria-expanded="false"
-            aria-controls="yearGrid"
-          >
-            <span>
-              <span class="eyebrow">Year View</span>
-              <strong id="yearTitle">--</strong>
-            </span>
-            <span id="yearToggleText" class="expand-label">expand</span>
-          </button>
+          <div class="year-view-module">
+            <div class="year-module-head">
+              <div class="year-view-title">
+                <span class="eyebrow">Year View</span>
+                <strong id="yearTitle">--</strong>
+              </div>
 
-          <div id="yearGrid" class="year-grid full-year-grid" aria-label="73 个拖拖日网格" hidden></div>
-          <div id="leapNote" class="leap-note"></div>
+              <div class="year-controls">
+                <button id="prevYear" class="icon-button" type="button" aria-label="上一年">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                </button>
+                <label class="year-field">
+                  <span>公历年份</span>
+                  <input id="yearInput" type="number" min="1" inputmode="numeric" />
+                </label>
+                <button id="nextYear" class="icon-button" type="button" aria-label="下一年">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </button>
+              </div>
+
+              <button
+                id="toggleYearView"
+                class="year-expand-button"
+                type="button"
+                aria-expanded="false"
+                aria-controls="yearGrid"
+              >
+                <span id="yearToggleText" class="expand-label">expand</span>
+              </button>
+            </div>
+
+            <div id="yearGrid" class="year-grid full-year-grid" aria-label="73 个拖拖日网格" hidden></div>
+            <div id="leapNote" class="leap-note"></div>
+          </div>
         </section>
       </section>
     </main>
