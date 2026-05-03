@@ -198,15 +198,8 @@
       </section>
 
       <section id="timeView" class="app-view time-view" role="tabpanel" aria-labelledby="timeTab" hidden>
-        <header class="time-masthead">
-          <div>
-            <p class="eyebrow">Time</p>
-            <h1>世界时间</h1>
-          </div>
-        </header>
-
-        <section class="world-clock-panel" aria-label="世界时钟">
-          <div class="lock-clock" aria-live="polite">
+        <section class="world-clock-panel study-clock-panel" aria-label="世界时钟">
+          <div class="lock-clock study-clock" aria-live="polite">
             <div class="lock-status">
               <span id="clockCity">--</span>
               <span id="clockOffset">--</span>
@@ -216,30 +209,26 @@
             <div id="clockTuotuo" class="lock-tuotuo">--</div>
           </div>
 
-          <div class="clock-controls">
-            <div class="panel-head compact-head">
-              <div>
-                <p class="eyebrow">World Clock</p>
-                <h2>城市</h2>
+          <details class="clock-settings">
+            <summary>城市</summary>
+            <div class="clock-controls">
+              <div class="clock-picker">
+                <label class="field">
+                  <span>城市</span>
+                  <select id="clockCitySelect"></select>
+                </label>
+                <button id="addClockCity" class="text-button" type="button">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 5v14" />
+                    <path d="M5 12h14" />
+                  </svg>
+                  添加
+                </button>
               </div>
-            </div>
 
-            <div class="clock-picker">
-              <label class="field">
-                <span>城市</span>
-                <select id="clockCitySelect"></select>
-              </label>
-              <button id="addClockCity" class="text-button" type="button">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 5v14" />
-                  <path d="M5 12h14" />
-                </svg>
-                添加
-              </button>
+              <div id="clockCityList" class="clock-city-list" aria-label="已选世界时钟"></div>
             </div>
-
-            <div id="clockCityList" class="clock-city-list" aria-label="已选世界时钟"></div>
-          </div>
+          </details>
         </section>
       </section>
     </main>
