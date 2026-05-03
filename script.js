@@ -3,11 +3,36 @@ const NEW_DAYS_PER_YEAR = 73;
 const GREGORIAN_DAYS_PER_NEW_DAY = 5;
 const TUOTUO_EPOCH_YEAR = 2026;
 const TASK_STORAGE_KEY = "tuotuo-calendar-tasks-v1";
+const CLOCK_STORAGE_KEY = "tuotuo-world-clocks-v1";
+const CLOCK_ACTIVE_STORAGE_KEY = "tuotuo-world-clock-active-v1";
 const MIDNIGHT_REFRESH_BUFFER_MS = 1500;
 const TUOTUO_GROUPS = [
   { name: "小木", start: 1, length: 24 },
   { name: "紫叶树", start: 25, length: 24 },
   { name: "大松树", start: 49, length: 25 },
+];
+const CLOCK_CITIES = [
+  { id: "Asia/Shanghai", name: "上海", country: "中国", timeZone: "Asia/Shanghai" },
+  { id: "Asia/Tokyo", name: "东京", country: "日本", timeZone: "Asia/Tokyo" },
+  { id: "Asia/Seoul", name: "首尔", country: "韩国", timeZone: "Asia/Seoul" },
+  { id: "Asia/Hong_Kong", name: "香港", country: "中国", timeZone: "Asia/Hong_Kong" },
+  { id: "Asia/Taipei", name: "台北", country: "中国台湾", timeZone: "Asia/Taipei" },
+  { id: "Asia/Singapore", name: "新加坡", country: "新加坡", timeZone: "Asia/Singapore" },
+  { id: "Asia/Bangkok", name: "曼谷", country: "泰国", timeZone: "Asia/Bangkok" },
+  { id: "Asia/Dubai", name: "迪拜", country: "阿联酋", timeZone: "Asia/Dubai" },
+  { id: "Asia/Kolkata", name: "新德里", country: "印度", timeZone: "Asia/Kolkata" },
+  { id: "Europe/London", name: "伦敦", country: "英国", timeZone: "Europe/London" },
+  { id: "Europe/Paris", name: "巴黎", country: "法国", timeZone: "Europe/Paris" },
+  { id: "Europe/Berlin", name: "柏林", country: "德国", timeZone: "Europe/Berlin" },
+  { id: "Europe/Moscow", name: "莫斯科", country: "俄罗斯", timeZone: "Europe/Moscow" },
+  { id: "Africa/Cairo", name: "开罗", country: "埃及", timeZone: "Africa/Cairo" },
+  { id: "America/New_York", name: "纽约", country: "美国", timeZone: "America/New_York" },
+  { id: "America/Chicago", name: "芝加哥", country: "美国", timeZone: "America/Chicago" },
+  { id: "America/Denver", name: "丹佛", country: "美国", timeZone: "America/Denver" },
+  { id: "America/Los_Angeles", name: "洛杉矶", country: "美国", timeZone: "America/Los_Angeles" },
+  { id: "Pacific/Honolulu", name: "檀香山", country: "美国", timeZone: "Pacific/Honolulu" },
+  { id: "Australia/Sydney", name: "悉尼", country: "澳大利亚", timeZone: "Australia/Sydney" },
+  { id: "Pacific/Auckland", name: "奥克兰", country: "新西兰", timeZone: "Pacific/Auckland" },
 ];
 
 const els = {
@@ -18,6 +43,14 @@ const els = {
   currentKicker: document.querySelector("#currentKicker"),
   currentTitle: document.querySelector("#currentTitle"),
   currentRange: document.querySelector("#currentRange"),
+  clockCity: document.querySelector("#clockCity"),
+  clockOffset: document.querySelector("#clockOffset"),
+  clockDate: document.querySelector("#clockDate"),
+  clockTime: document.querySelector("#clockTime"),
+  clockTuotuo: document.querySelector("#clockTuotuo"),
+  clockCitySelect: document.querySelector("#clockCitySelect"),
+  addClockCity: document.querySelector("#addClockCity"),
+  clockCityList: document.querySelector("#clockCityList"),
   groupGrid: document.querySelector("#groupGrid"),
   seasonTitle: document.querySelector("#seasonTitle"),
   seasonGrid: document.querySelector("#seasonGrid"),
@@ -50,6 +83,9 @@ let yearExpanded = false;
 let followToday = true;
 let todayRefreshTimer = null;
 let lastTodayKey = toInputDate(selectedDate);
+let clockCityIds = loadClockCityIds();
+let activeClockCityId = loadActiveClockCityId(clockCityIds);
+let clockTimer = null;
 let tasks = loadTasks();
 let taskEditor = createEmptyTaskEditor();
 
@@ -176,6 +212,56 @@ function saveTasks() {
   }
 }
 
+function getClockCity(id) {
+  return CLOCK_CITIES.find((city) => city.id === id) || CLOCK_CITIES[0];
+}
+
+function getDefaultClockCityIds() {
+  const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const localCity = CLOCK_CITIES.find((city) => city.timeZone === localTimeZone);
+  return [...new Set([localCity?.id || "Asia/Tokyo", "Asia/Shanghai", "America/New_York"])];
+}
+
+function loadClockCityIds() {
+  try {
+    const rawCityIds = localStorage.getItem(CLOCK_STORAGE_KEY);
+    const parsedCityIds = rawCityIds ? JSON.parse(rawCityIds) : null;
+    if (!Array.isArray(parsedCityIds)) return getDefaultClockCityIds();
+
+    const cityIds = parsedCityIds.filter((id) => CLOCK_CITIES.some((city) => city.id === id));
+    return cityIds.length ? [...new Set(cityIds)] : getDefaultClockCityIds();
+  } catch {
+    return getDefaultClockCityIds();
+  }
+}
+
+function loadActiveClockCityId(cityIds) {
+  try {
+    const activeCityId = localStorage.getItem(CLOCK_ACTIVE_STORAGE_KEY);
+    if (activeCityId && cityIds.includes(activeCityId)) return activeCityId;
+  } catch {
+    // Browser storage can be disabled; fall back to the first visible clock.
+  }
+
+  return cityIds[0] || getDefaultClockCityIds()[0];
+}
+
+function saveClockCityIds() {
+  try {
+    localStorage.setItem(CLOCK_STORAGE_KEY, JSON.stringify(clockCityIds));
+  } catch {
+    // Browser storage can be disabled; the selected clocks still work for the current session.
+  }
+}
+
+function saveActiveClockCityId() {
+  try {
+    localStorage.setItem(CLOCK_ACTIVE_STORAGE_KEY, activeClockCityId);
+  } catch {
+    // Browser storage can be disabled; the selected clock still works for the current session.
+  }
+}
+
 function makeTaskId() {
   if (window.crypto && typeof window.crypto.randomUUID === "function") return window.crypto.randomUUID();
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -218,6 +304,64 @@ function formatTaskKey(key) {
   const start = dateFromDayOfYear(year, (day - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1);
   const end = dateFromDayOfYear(year, day * GREGORIAN_DAYS_PER_NEW_DAY);
   return `${formatTuotuoYear(year)} 第${day}日 · ${formatShort(start)}-${formatShort(end)}`;
+}
+
+function formatOffset(timeZone) {
+  const offsetPart = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour: "2-digit",
+    timeZoneName: "shortOffset",
+  })
+    .formatToParts(new Date())
+    .find((part) => part.type === "timeZoneName");
+
+  return (offsetPart?.value || "GMT").replace("GMT", "UTC");
+}
+
+function getZonedParts(timeZone, date = new Date()) {
+  const partEntries = new Intl.DateTimeFormat("zh-CN", {
+    timeZone,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    weekday: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  })
+    .formatToParts(date)
+    .filter((part) => part.type !== "literal")
+    .map((part) => [part.type, part.value]);
+
+  return Object.fromEntries(partEntries);
+}
+
+function dateFromZonedParts(parts) {
+  return new Date(Number(parts.year), Number(parts.month) - 1, Number(parts.day));
+}
+
+function formatClockDate(parts) {
+  return `${Number(parts.month)}月${Number(parts.day)}日 ${parts.weekday}`;
+}
+
+function formatClockTime(parts) {
+  return `${parts.hour}:${parts.minute}`;
+}
+
+function formatClockTuotuo(parts) {
+  const info = convertDate(dateFromZonedParts(parts));
+  if (info.leapExtra) return `${formatTuotuoYear(info.year)} · 闰余日`;
+  return `${formatTuotuoYear(info.year)} · 第${info.newDay}日 · 第${info.phase}/5个公历日`;
+}
+
+function formatRelativeClockDate(parts) {
+  const zonedDate = dateFromZonedParts(parts);
+  const today = getToday();
+  const diffDays = daysBetween(today, zonedDate);
+  if (diffDays === 0) return "今天";
+  if (diffDays === 1) return "明天";
+  if (diffDays === -1) return "昨天";
+  return `${Number(parts.month)}月${Number(parts.day)}日`;
 }
 
 function summarizeTaskDates(task) {
@@ -327,6 +471,81 @@ function renderGroups(info) {
     `;
     els.groupGrid.append(button);
   });
+}
+
+function populateClockCitySelect() {
+  els.clockCitySelect.innerHTML = "";
+  CLOCK_CITIES.forEach((city) => {
+    const option = document.createElement("option");
+    option.value = city.id;
+    option.textContent = `${city.name} · ${city.country}`;
+    els.clockCitySelect.append(option);
+  });
+}
+
+function renderWorldClock() {
+  if (!clockCityIds.length) {
+    clockCityIds = getDefaultClockCityIds();
+    activeClockCityId = clockCityIds[0];
+    saveClockCityIds();
+  }
+
+  if (!clockCityIds.includes(activeClockCityId)) {
+    activeClockCityId = clockCityIds[0];
+    saveActiveClockCityId();
+  }
+
+  const activeCity = getClockCity(activeClockCityId);
+  const activeParts = getZonedParts(activeCity.timeZone);
+  els.clockCity.textContent = activeCity.name;
+  els.clockOffset.textContent = formatOffset(activeCity.timeZone);
+  els.clockDate.textContent = `${formatClockDate(activeParts)} · ${activeCity.country}`;
+  els.clockTime.textContent = formatClockTime(activeParts);
+  els.clockTuotuo.textContent = formatClockTuotuo(activeParts);
+
+  els.clockCityList.innerHTML = "";
+  clockCityIds.forEach((cityId) => {
+    const city = getClockCity(cityId);
+    const parts = getZonedParts(city.timeZone);
+    const row = document.createElement("div");
+    row.className = `clock-city-card${city.id === activeClockCityId ? " is-active" : ""}`;
+
+    const selectButton = document.createElement("button");
+    selectButton.type = "button";
+    selectButton.className = "clock-city-main";
+    selectButton.dataset.clockSelect = city.id;
+    selectButton.setAttribute("aria-label", `显示${city.name}时间`);
+    selectButton.innerHTML = `
+      <span class="clock-city-name">${city.name}</span>
+      <span class="clock-city-meta">${city.country} · ${formatRelativeClockDate(parts)} · ${formatOffset(city.timeZone)}</span>
+    `;
+
+    const time = document.createElement("span");
+    time.className = "clock-city-time";
+    time.textContent = formatClockTime(parts);
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "icon-button clock-remove";
+    removeButton.dataset.clockRemove = city.id;
+    removeButton.setAttribute("aria-label", `移除${city.name}`);
+    removeButton.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M18 6 6 18" />
+        <path d="m6 6 12 12" />
+      </svg>
+    `;
+
+    row.append(selectButton, time, removeButton);
+    els.clockCityList.append(row);
+  });
+}
+
+function startWorldClock() {
+  populateClockCitySelect();
+  renderWorldClock();
+  window.clearInterval(clockTimer);
+  clockTimer = window.setInterval(renderWorldClock, 1000);
 }
 
 function createDayCard(day, info, todayInfo) {
@@ -740,6 +959,48 @@ els.nextDay.addEventListener("click", () => {
   shiftNewDay(1);
 });
 
+els.addClockCity.addEventListener("click", () => {
+  const cityId = els.clockCitySelect.value;
+  if (!CLOCK_CITIES.some((city) => city.id === cityId)) return;
+
+  if (!clockCityIds.includes(cityId)) {
+    clockCityIds.push(cityId);
+  }
+
+  activeClockCityId = cityId;
+  saveClockCityIds();
+  saveActiveClockCityId();
+  renderWorldClock();
+});
+
+els.clockCityList.addEventListener("click", (event) => {
+  const removeButton = event.target.closest("[data-clock-remove]");
+  if (removeButton) {
+    const cityId = removeButton.dataset.clockRemove;
+    clockCityIds = clockCityIds.filter((candidate) => candidate !== cityId);
+
+    if (!clockCityIds.length) {
+      clockCityIds = [getDefaultClockCityIds()[0]];
+    }
+
+    if (!clockCityIds.includes(activeClockCityId)) {
+      activeClockCityId = clockCityIds[0];
+    }
+
+    saveClockCityIds();
+    saveActiveClockCityId();
+    renderWorldClock();
+    return;
+  }
+
+  const selectButton = event.target.closest("[data-clock-select]");
+  if (!selectButton) return;
+
+  activeClockCityId = selectButton.dataset.clockSelect;
+  saveActiveClockCityId();
+  renderWorldClock();
+});
+
 els.prevYear.addEventListener("click", () => {
   followToday = false;
   viewedYear -= 1;
@@ -850,19 +1111,25 @@ document.addEventListener("keydown", (event) => {
 
 window.addEventListener("pageshow", () => {
   syncTodayIfNeeded();
+  renderWorldClock();
   scheduleTodayRefresh();
 });
 
 window.addEventListener("focus", () => {
   syncTodayIfNeeded();
+  renderWorldClock();
 });
 
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) syncTodayIfNeeded();
+  if (!document.hidden) {
+    syncTodayIfNeeded();
+    renderWorldClock();
+  }
 });
 
 const initialInfo = convertDate(selectedDate);
 viewedGroupIndex = initialInfo.leapExtra ? TUOTUO_GROUPS.length - 1 : groupIndexForInfo(initialInfo);
+startWorldClock();
 render();
 scheduleTodayRefresh();
 syncTodayIfNeeded({ force: true });

@@ -56,6 +56,43 @@
         </div>
       </section>
 
+      <section class="world-clock-panel" aria-label="世界时钟">
+        <div class="lock-clock" aria-live="polite">
+          <div class="lock-status">
+            <span id="clockCity">--</span>
+            <span id="clockOffset">--</span>
+          </div>
+          <div id="clockDate" class="lock-date">--</div>
+          <div id="clockTime" class="lock-time">--:--</div>
+          <div id="clockTuotuo" class="lock-tuotuo">--</div>
+        </div>
+
+        <div class="clock-controls">
+          <div class="panel-head compact-head">
+            <div>
+              <p class="eyebrow">World Clock</p>
+              <h2>世界时间</h2>
+            </div>
+          </div>
+
+          <div class="clock-picker">
+            <label class="field">
+              <span>城市</span>
+              <select id="clockCitySelect"></select>
+            </label>
+            <button id="addClockCity" class="text-button" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 5v14" />
+                <path d="M5 12h14" />
+              </svg>
+              添加
+            </button>
+          </div>
+
+          <div id="clockCityList" class="clock-city-list" aria-label="已选世界时钟"></div>
+        </div>
+      </section>
+
       <section class="group-panel" aria-label="拖拖历花季">
         <div class="panel-head compact-head">
           <div>
