@@ -36,6 +36,9 @@ const CLOCK_CITIES = [
 ];
 
 const els = {
+  viewTabs: document.querySelectorAll("[data-view-tab]"),
+  homeView: document.querySelector("#homeView"),
+  timeView: document.querySelector("#timeView"),
   dateInput: document.querySelector("#dateInput"),
   todayButton: document.querySelector("#todayButton"),
   prevDay: document.querySelector("#prevDay"),
@@ -80,6 +83,7 @@ let selectedDate = startOfDay(new Date());
 let viewedYear = selectedDate.getFullYear();
 let viewedGroupIndex = 0;
 let yearExpanded = false;
+let activeView = getInitialView();
 let followToday = true;
 let todayRefreshTimer = null;
 let lastTodayKey = toInputDate(selectedDate);
@@ -95,6 +99,34 @@ function startOfDay(date) {
 
 function getToday() {
   return startOfDay(new Date());
+}
+
+function getInitialView() {
+  return window.location.hash === "#time" ? "time" : "home";
+}
+
+function setActiveView(view, options = {}) {
+  activeView = view === "time" ? "time" : "home";
+
+  els.viewTabs.forEach((tab) => {
+    const isActive = tab.dataset.viewTab === activeView;
+    tab.classList.toggle("is-active", isActive);
+    tab.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+
+  els.homeView.hidden = activeView !== "home";
+  els.timeView.hidden = activeView !== "time";
+
+  if (activeView === "time") {
+    renderWorldClock();
+  }
+
+  if (options.updateHash === false) return;
+
+  const nextHash = activeView === "time" ? "#time" : "#home";
+  if (window.location.hash !== nextHash) {
+    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${nextHash}`);
+  }
 }
 
 function isSameDate(firstDate, secondDate) {
@@ -942,6 +974,12 @@ function deleteEditingTask() {
   closeTaskEditor();
 }
 
+els.viewTabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    setActiveView(tab.dataset.viewTab);
+  });
+});
+
 els.dateInput.addEventListener("change", (event) => {
   const nextDate = parseDateInput(event.target.value);
   selectDate(nextDate, { followToday: isSameDate(nextDate, getToday()) });
@@ -1109,6 +1147,10 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && taskEditor.open) closeTaskEditor();
 });
 
+window.addEventListener("hashchange", () => {
+  setActiveView(getInitialView(), { updateHash: false });
+});
+
 window.addEventListener("pageshow", () => {
   syncTodayIfNeeded();
   renderWorldClock();
@@ -1130,6 +1172,7 @@ document.addEventListener("visibilitychange", () => {
 const initialInfo = convertDate(selectedDate);
 viewedGroupIndex = initialInfo.leapExtra ? TUOTUO_GROUPS.length - 1 : groupIndexForInfo(initialInfo);
 startWorldClock();
+setActiveView(activeView, { updateHash: false });
 render();
 scheduleTodayRefresh();
 syncTodayIfNeeded({ force: true });

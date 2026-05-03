@@ -62,7 +62,65 @@ svg {
   padding: 28px 0 42px;
 }
 
+.function-tabs {
+  display: flex;
+  align-items: end;
+  margin-bottom: 16px;
+  padding-top: 2px;
+}
+
+.function-tab {
+  position: relative;
+  min-width: 168px;
+  height: 46px;
+  border: 1px solid var(--line);
+  border-bottom-color: rgba(23, 32, 29, 0.58);
+  border-radius: 8px 8px 0 0;
+  padding: 0 24px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.56);
+  font-weight: 850;
+  transform: translateY(1px);
+}
+
+.function-tab + .function-tab {
+  margin-left: -1px;
+}
+
+.function-tab.is-active {
+  z-index: 1;
+  border-color: rgba(23, 32, 29, 0.62);
+  border-bottom-color: transparent;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.function-tab:focus-visible {
+  outline: 3px solid rgba(15, 118, 110, 0.18);
+  outline-offset: -2px;
+}
+
+.tab-line {
+  display: block;
+  min-width: 22px;
+  flex: 1;
+  border-bottom: 1px solid rgba(23, 32, 29, 0.58);
+}
+
+.app-view {
+  min-width: 0;
+}
+
 .masthead {
+  display: flex;
+  min-height: 112px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px 0 18px;
+}
+
+.time-masthead {
   display: flex;
   min-height: 112px;
   align-items: flex-end;
@@ -319,6 +377,10 @@ h2 {
   margin-top: 18px;
   border-radius: 8px;
   padding: 16px;
+}
+
+.time-view .world-clock-panel {
+  margin-top: 12px;
 }
 
 .lock-clock {
@@ -935,13 +997,20 @@ h2 {
 
 @media (max-width: 920px) {
   .masthead,
+  .time-masthead,
   .panel-head {
     align-items: stretch;
   }
 
   .masthead,
+  .time-masthead,
   .panel-head {
     flex-direction: column;
+  }
+
+  .function-tab {
+    min-width: 142px;
+    padding: 0 18px;
   }
 
   .season-grid,
@@ -987,6 +1056,16 @@ h2 {
 }
 
 @media (max-width: 600px) {
+  .function-tabs {
+    overflow-x: auto;
+  }
+
+  .function-tab {
+    min-width: 128px;
+    height: 42px;
+    padding: 0 14px;
+  }
+
   .control-band {
     grid-template-columns: 1fr;
     gap: 16px;

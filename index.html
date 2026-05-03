@@ -8,90 +8,80 @@
   </head>
   <body>
     <main class="app-shell">
-      <header class="masthead">
-        <div>
-          <p class="eyebrow">Calendar 73</p>
-          <h1>拖拖历</h1>
-        </div>
-        <div class="rule-stack" aria-label="拖拖历规则">
-          <span>5 公历日 = 1 拖拖日</span>
-          <span>1 公历年 = 73 拖拖日</span>
-        </div>
-      </header>
+      <nav class="function-tabs" aria-label="功能分类" role="tablist">
+        <button
+          id="homeTab"
+          class="function-tab is-active"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="homeView"
+          data-view-tab="home"
+        >
+          Home Page
+        </button>
+        <button
+          id="timeTab"
+          class="function-tab"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="timeView"
+          data-view-tab="time"
+        >
+          Time
+        </button>
+        <span class="tab-line" aria-hidden="true"></span>
+      </nav>
 
-      <section class="control-band" aria-label="日期控制">
-        <div class="date-controls">
-          <label class="field">
-            <span>公历日期</span>
-            <input id="dateInput" type="date" />
-          </label>
-
-          <div class="button-row" aria-label="切换拖拖日">
-            <button id="prevDay" class="icon-button" type="button" aria-label="上一拖拖日">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-            </button>
-            <button id="todayButton" class="text-button" type="button">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M8 2v4" />
-                <path d="M16 2v4" />
-                <path d="M3 10h18" />
-                <rect x="3" y="4" width="18" height="18" rx="2" />
-              </svg>
-              今天
-            </button>
-            <button id="nextDay" class="icon-button" type="button" aria-label="下一拖拖日">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </button>
+      <section id="homeView" class="app-view is-active" role="tabpanel" aria-labelledby="homeTab">
+        <header class="masthead">
+          <div>
+            <p class="eyebrow">Calendar 73</p>
+            <h1>拖拖历</h1>
           </div>
-        </div>
-
-        <div class="current-reading" aria-label="当前拖拖日">
-          <p id="currentKicker" class="eyebrow">拖拖历</p>
-          <strong id="currentTitle">--</strong>
-          <span id="currentRange">--</span>
-        </div>
-      </section>
-
-      <section class="world-clock-panel" aria-label="世界时钟">
-        <div class="lock-clock" aria-live="polite">
-          <div class="lock-status">
-            <span id="clockCity">--</span>
-            <span id="clockOffset">--</span>
+          <div class="rule-stack" aria-label="拖拖历规则">
+            <span>5 公历日 = 1 拖拖日</span>
+            <span>1 公历年 = 73 拖拖日</span>
           </div>
-          <div id="clockDate" class="lock-date">--</div>
-          <div id="clockTime" class="lock-time">--:--</div>
-          <div id="clockTuotuo" class="lock-tuotuo">--</div>
-        </div>
+        </header>
 
-        <div class="clock-controls">
-          <div class="panel-head compact-head">
-            <div>
-              <p class="eyebrow">World Clock</p>
-              <h2>世界时间</h2>
+        <section class="control-band" aria-label="日期控制">
+          <div class="date-controls">
+            <label class="field">
+              <span>公历日期</span>
+              <input id="dateInput" type="date" />
+            </label>
+
+            <div class="button-row" aria-label="切换拖拖日">
+              <button id="prevDay" class="icon-button" type="button" aria-label="上一拖拖日">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+              <button id="todayButton" class="text-button" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 2v4" />
+                  <path d="M16 2v4" />
+                  <path d="M3 10h18" />
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                </svg>
+                今天
+              </button>
+              <button id="nextDay" class="icon-button" type="button" aria-label="下一拖拖日">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
             </div>
           </div>
 
-          <div class="clock-picker">
-            <label class="field">
-              <span>城市</span>
-              <select id="clockCitySelect"></select>
-            </label>
-            <button id="addClockCity" class="text-button" type="button">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 5v14" />
-                <path d="M5 12h14" />
-              </svg>
-              添加
-            </button>
+          <div class="current-reading" aria-label="当前拖拖日">
+            <p id="currentKicker" class="eyebrow">拖拖历</p>
+            <strong id="currentTitle">--</strong>
+            <span id="currentRange">--</span>
           </div>
-
-          <div id="clockCityList" class="clock-city-list" aria-label="已选世界时钟"></div>
-        </div>
-      </section>
+        </section>
 
       <section class="group-panel" aria-label="拖拖历花季">
         <div class="panel-head compact-head">
@@ -202,6 +192,53 @@
 
             <div id="yearGrid" class="year-grid full-year-grid" aria-label="73 个拖拖日网格" hidden></div>
             <div id="leapNote" class="leap-note"></div>
+          </div>
+        </section>
+      </section>
+      </section>
+
+      <section id="timeView" class="app-view time-view" role="tabpanel" aria-labelledby="timeTab" hidden>
+        <header class="time-masthead">
+          <div>
+            <p class="eyebrow">Time</p>
+            <h1>世界时间</h1>
+          </div>
+        </header>
+
+        <section class="world-clock-panel" aria-label="世界时钟">
+          <div class="lock-clock" aria-live="polite">
+            <div class="lock-status">
+              <span id="clockCity">--</span>
+              <span id="clockOffset">--</span>
+            </div>
+            <div id="clockDate" class="lock-date">--</div>
+            <div id="clockTime" class="lock-time">--:--</div>
+            <div id="clockTuotuo" class="lock-tuotuo">--</div>
+          </div>
+
+          <div class="clock-controls">
+            <div class="panel-head compact-head">
+              <div>
+                <p class="eyebrow">World Clock</p>
+                <h2>城市</h2>
+              </div>
+            </div>
+
+            <div class="clock-picker">
+              <label class="field">
+                <span>城市</span>
+                <select id="clockCitySelect"></select>
+              </label>
+              <button id="addClockCity" class="text-button" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5v14" />
+                  <path d="M5 12h14" />
+                </svg>
+                添加
+              </button>
+            </div>
+
+            <div id="clockCityList" class="clock-city-list" aria-label="已选世界时钟"></div>
           </div>
         </section>
       </section>
