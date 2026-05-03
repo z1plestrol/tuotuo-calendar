@@ -3,6 +3,7 @@ const NEW_DAYS_PER_YEAR = 73;
 const GREGORIAN_DAYS_PER_NEW_DAY = 5;
 const TUOTUO_EPOCH_YEAR = 2026;
 const TASK_STORAGE_KEY = "tuotuo-calendar-tasks-v1";
+const MIDNIGHT_REFRESH_BUFFER_MS = 1500;
 const TUOTUO_GROUPS = [
   { name: "小木", start: 1, length: 24 },
   { name: "紫叶树", start: 25, length: 24 },
@@ -46,11 +47,26 @@ let selectedDate = startOfDay(new Date());
 let viewedYear = selectedDate.getFullYear();
 let viewedGroupIndex = 0;
 let yearExpanded = false;
+let followToday = true;
+let todayRefreshTimer = null;
+let lastTodayKey = toInputDate(selectedDate);
 let tasks = loadTasks();
 let taskEditor = createEmptyTaskEditor();
 
 function startOfDay(date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function getToday() {
+  return startOfDay(new Date());
+}
+
+function isSameDate(firstDate, secondDate) {
+  return (
+    firstDate.getFullYear() === secondDate.getFullYear() &&
+    firstDate.getMonth() === secondDate.getMonth() &&
+    firstDate.getDate() === secondDate.getDate()
+  );
 }
 
 function isLeapYear(year) {
@@ -400,12 +416,54 @@ function render() {
   if (taskEditor.open) renderTaskEditor();
 }
 
-function selectDate(date) {
+function selectDate(date, options = {}) {
   selectedDate = startOfDay(date);
+  if (typeof options.followToday === "boolean") {
+    followToday = options.followToday;
+  }
   viewedYear = selectedDate.getFullYear();
   const info = convertDate(selectedDate);
   viewedGroupIndex = info.leapExtra ? TUOTUO_GROUPS.length - 1 : groupIndexForInfo(info);
   render();
+}
+
+function msUntilNextLocalDay() {
+  const now = new Date();
+  const nextDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, MIDNIGHT_REFRESH_BUFFER_MS);
+  return Math.max(1000, nextDay.getTime() - now.getTime());
+}
+
+function scheduleTodayRefresh() {
+  window.clearTimeout(todayRefreshTimer);
+  todayRefreshTimer = window.setTimeout(() => {
+    syncTodayIfNeeded();
+    scheduleTodayRefresh();
+  }, msUntilNextLocalDay());
+}
+
+function syncTodayIfNeeded(options = {}) {
+  const today = getToday();
+  const todayKey = toInputDate(today);
+  const dateRolledOver = todayKey !== lastTodayKey;
+  lastTodayKey = todayKey;
+
+  if (taskEditor.open && !options.force) {
+    return;
+  }
+
+  if (!followToday && !options.force) {
+    if (dateRolledOver) render();
+    return;
+  }
+
+  followToday = true;
+  if (!isSameDate(selectedDate, today) || viewedYear !== today.getFullYear() || dateRolledOver || options.force) {
+    selectedDate = today;
+    viewedYear = today.getFullYear();
+    const info = convertDate(selectedDate);
+    viewedGroupIndex = info.leapExtra ? TUOTUO_GROUPS.length - 1 : groupIndexForInfo(info);
+    render();
+  }
 }
 
 function shiftNewDay(delta) {
@@ -413,7 +471,7 @@ function shiftNewDay(delta) {
 
   if (info.leapExtra) {
     const target = delta > 0 ? new Date(info.year + 1, 0, 1) : dateFromDayOfYear(info.year, 361);
-    selectDate(target);
+    selectDate(target, { followToday: false });
     return;
   }
 
@@ -430,7 +488,9 @@ function shiftNewDay(delta) {
     targetDay -= NEW_DAYS_PER_YEAR;
   }
 
-  selectDate(dateFromDayOfYear(targetYear, (targetDay - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1));
+  selectDate(dateFromDayOfYear(targetYear, (targetDay - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1), {
+    followToday: false,
+  });
 }
 
 function syncTaskFields() {
@@ -454,6 +514,10 @@ function openTaskEditor(year, day) {
 function closeTaskEditor() {
   taskEditor = createEmptyTaskEditor();
   els.taskOverlay.hidden = true;
+  if (followToday) {
+    syncTodayIfNeeded();
+    return;
+  }
   render();
 }
 
@@ -479,6 +543,7 @@ function pickTaskDay(year, day, extendRange) {
   selectedDate = dateFromDayOfYear(year, (day - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1);
   viewedYear = year;
   viewedGroupIndex = groupIndexForDay(day) - 1;
+  followToday = isSameDate(selectedDate, getToday());
   if (!taskEditor.editingId) {
     taskEditor.draftKeys = cloneDayKeys(taskEditor.selectedKeys);
   }
@@ -596,6 +661,7 @@ function startEditingTask(taskId) {
     selectedDate = dateFromDayOfYear(year, (day - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1);
     viewedYear = year;
     viewedGroupIndex = groupIndexForDay(day) - 1;
+    followToday = isSameDate(selectedDate, getToday());
   }
 
   taskEditor.open = true;
@@ -658,11 +724,12 @@ function deleteEditingTask() {
 }
 
 els.dateInput.addEventListener("change", (event) => {
-  selectDate(parseDateInput(event.target.value));
+  const nextDate = parseDateInput(event.target.value);
+  selectDate(nextDate, { followToday: isSameDate(nextDate, getToday()) });
 });
 
 els.todayButton.addEventListener("click", () => {
-  selectDate(new Date());
+  syncTodayIfNeeded({ force: true });
 });
 
 els.prevDay.addEventListener("click", () => {
@@ -674,11 +741,13 @@ els.nextDay.addEventListener("click", () => {
 });
 
 els.prevYear.addEventListener("click", () => {
+  followToday = false;
   viewedYear -= 1;
   render();
 });
 
 els.nextYear.addEventListener("click", () => {
+  followToday = false;
   viewedYear += 1;
   render();
 });
@@ -686,6 +755,7 @@ els.nextYear.addEventListener("click", () => {
 els.yearInput.addEventListener("change", (event) => {
   const value = Number.parseInt(event.target.value, 10);
   if (!Number.isNaN(value) && value > 0) {
+    followToday = false;
     viewedYear = value;
   }
   render();
@@ -701,7 +771,8 @@ function handleDayGridClick(event) {
     return;
   }
 
-  selectDate(dateFromDayOfYear(viewedYear, (day - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1));
+  const targetDate = dateFromDayOfYear(viewedYear, (day - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1);
+  selectDate(targetDate, { followToday: isSameDate(targetDate, getToday()) });
   openTaskEditor(viewedYear, day);
 }
 
@@ -718,7 +789,9 @@ els.groupGrid.addEventListener("click", (event) => {
   if (!button) return;
 
   const group = TUOTUO_GROUPS[Number.parseInt(button.dataset.group, 10)];
-  selectDate(dateFromDayOfYear(viewedYear, (group.start - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1));
+  selectDate(dateFromDayOfYear(viewedYear, (group.start - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1), {
+    followToday: false,
+  });
 });
 
 els.taskTitle.addEventListener("input", () => {
@@ -775,6 +848,21 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && taskEditor.open) closeTaskEditor();
 });
 
+window.addEventListener("pageshow", () => {
+  syncTodayIfNeeded();
+  scheduleTodayRefresh();
+});
+
+window.addEventListener("focus", () => {
+  syncTodayIfNeeded();
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) syncTodayIfNeeded();
+});
+
 const initialInfo = convertDate(selectedDate);
 viewedGroupIndex = initialInfo.leapExtra ? TUOTUO_GROUPS.length - 1 : groupIndexForInfo(initialInfo);
 render();
+scheduleTodayRefresh();
+syncTodayIfNeeded({ force: true });
