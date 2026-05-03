@@ -503,21 +503,31 @@ h2 {
 .year-field span {
   position: absolute;
   top: -11px;
-  left: 50%;
+  left: 0;
+  width: 100%;
   color: var(--muted);
   font-size: 0.5rem;
-  font-weight: 900;
+  font-weight: 820;
   line-height: 1;
+  text-align: center;
   white-space: nowrap;
-  transform: translateX(-50%);
 }
 
 .year-field input {
+  appearance: textfield;
   height: 34px;
   padding: 0 6px;
   font-size: 0.9rem;
-  font-weight: 850;
+  font-weight: 720;
+  font-variant-numeric: tabular-nums;
   text-align: center;
+}
+
+.year-field input::-webkit-inner-spin-button,
+.year-field input::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .group-grid {
