@@ -190,9 +190,16 @@ h2 {
 }
 
 .year-controls {
-  display: flex;
-  align-items: end;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: 34px 72px 34px;
+  align-items: center;
+  gap: 6px;
+}
+
+.year-controls .icon-button {
+  width: 34px;
+  height: 34px;
+  flex-basis: 34px;
 }
 
 .icon-button,
@@ -487,7 +494,30 @@ h2 {
 }
 
 .year-field {
-  width: 118px;
+  position: relative;
+  display: block;
+  width: 72px;
+  min-width: 0;
+}
+
+.year-field span {
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  color: var(--muted);
+  font-size: 0.5rem;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.year-field input {
+  height: 34px;
+  padding: 0 6px;
+  font-size: 0.9rem;
+  font-weight: 850;
+  text-align: center;
 }
 
 .group-grid {
@@ -584,7 +614,7 @@ h2 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 14px;
+  gap: 8px;
 }
 
 .year-view-title {
@@ -604,12 +634,12 @@ h2 {
 
 .year-expand-button {
   display: inline-flex;
-  min-height: 58px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
   border: 0;
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 6px 8px;
   color: var(--ink);
   background: transparent;
   text-align: left;
@@ -929,21 +959,21 @@ h2 {
   }
 
   .year-module-head {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto auto;
   }
 
   .year-view-title {
-    grid-column: 1 / -1;
+    grid-column: auto;
   }
 
   .year-controls {
-    grid-column: 1;
-    justify-self: stretch;
+    grid-column: auto;
+    justify-self: end;
   }
 
   .year-expand-button {
-    grid-column: 2;
-    align-self: end;
+    grid-column: auto;
+    align-self: center;
   }
 }
 
@@ -1008,33 +1038,43 @@ h2 {
 
   .year-controls {
     display: grid;
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: auto;
+    grid-template-columns: 30px 64px 30px;
+    gap: 5px;
+    justify-self: start;
+  }
+
+  .year-controls .icon-button {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
   }
 
   .year-field {
-    flex: none;
-    width: 100%;
+    width: 64px;
     min-width: 0;
   }
 
-  .year-field {
-    grid-column: 1 / -1;
-    grid-row: 1;
+  .year-field span {
+    top: -10px;
+    font-size: 0.48rem;
+  }
+
+  .year-field input {
+    height: 30px;
+    font-size: 0.82rem;
   }
 
   #prevYear {
-    grid-column: 1;
-    grid-row: 2;
-    width: 100%;
+    grid-column: auto;
+    grid-row: auto;
+    width: 30px;
   }
 
   #nextYear {
-    grid-column: 2;
-    grid-row: 2;
-    width: 100%;
+    grid-column: auto;
+    grid-row: auto;
+    width: 30px;
   }
 
   .season-grid,
