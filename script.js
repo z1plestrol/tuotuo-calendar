@@ -598,7 +598,7 @@ function renderHomeworkPanel() {
   const end = dateFromDayOfYear(todayInfo.year, todayInfo.newDay * GREGORIAN_DAYS_PER_NEW_DAY);
 
   els.homeworkCount.textContent = String(todayTasks.length);
-  els.homeworkDate.textContent = `${formatTuotuoYear(todayInfo.year)} · 第 ${todayInfo.newDay} 日 · ${formatShort(start)}-${formatShort(end)}`;
+  els.homeworkDate.textContent = `${formatShort(start)}-${formatShort(end)}`;
 
   if (!todayTasks.length) {
     const empty = document.createElement("div");
@@ -613,7 +613,6 @@ function renderHomeworkPanel() {
     item.className = "homework-task";
     item.innerHTML = `
       <strong>${escapeHtml(task.title)}</strong>
-      <span>${escapeHtml(summarizeTaskDates(task))}</span>
       ${task.note ? `<span>${escapeHtml(task.note)}</span>` : ""}
     `;
     els.homeworkList.append(item);
