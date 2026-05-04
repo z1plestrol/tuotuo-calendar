@@ -380,20 +380,7 @@ h2 {
 }
 
 .time-view .world-clock-panel {
-  margin-top: 0;
-}
-
-.study-clock-panel {
-  display: grid;
-  min-height: calc(100vh - 136px);
-  min-width: 0;
-  grid-template-columns: 1fr;
-  align-content: stretch;
-  border: 0;
-  padding: 0;
-  background: transparent;
-  box-shadow: none;
-  backdrop-filter: none;
+  margin-top: 12px;
 }
 
 .lock-clock {
@@ -407,15 +394,6 @@ h2 {
     linear-gradient(160deg, rgba(255, 255, 255, 0.28) 0%, transparent 34%),
     linear-gradient(105deg, #6f9f88 0%, #d8c47b 48%, #d28aa2 100%);
   text-shadow: 0 1px 18px rgba(0, 0, 0, 0.22);
-}
-
-.study-clock {
-  display: flex;
-  min-height: calc(100vh - 190px);
-  min-width: 0;
-  flex-direction: column;
-  justify-content: center;
-  padding: clamp(28px, 5vw, 62px);
 }
 
 .lock-clock::after {
@@ -441,22 +419,12 @@ h2 {
   font-weight: 820;
 }
 
-.study-clock .lock-status {
-  font-size: clamp(1.15rem, 2vw, 2rem);
-}
-
 .lock-date {
   margin-top: 52px;
   color: rgba(245, 255, 255, 0.92);
   font-size: 1.55rem;
   font-weight: 860;
   line-height: 1.15;
-}
-
-.study-clock .lock-date {
-  margin-top: auto;
-  text-align: center;
-  font-size: clamp(1.7rem, 4vw, 4.2rem);
 }
 
 .lock-time {
@@ -467,16 +435,6 @@ h2 {
   letter-spacing: 0;
 }
 
-.study-clock .lock-time {
-  max-width: 100%;
-  min-width: 0;
-  margin: clamp(8px, 2vh, 22px) 0;
-  text-align: center;
-  font-size: clamp(6rem, 24vw, 20rem);
-  font-weight: 720;
-  line-height: 0.8;
-}
-
 .lock-tuotuo {
   margin-top: 12px;
   color: rgba(255, 255, 255, 0.88);
@@ -484,46 +442,15 @@ h2 {
   font-weight: 800;
 }
 
-.study-clock .lock-tuotuo {
-  margin-top: 0;
-  margin-bottom: auto;
-  text-align: center;
-  font-size: clamp(1rem, 1.7vw, 1.5rem);
-}
-
-.clock-settings {
-  justify-self: end;
-  margin-top: 10px;
-}
-
-.clock-settings summary {
-  display: inline-flex;
-  min-height: 34px;
-  align-items: center;
-  border: 1px solid rgba(15, 118, 110, 0.18);
-  border-radius: 999px;
-  padding: 0 14px;
-  color: var(--teal);
-  background: rgba(255, 255, 255, 0.78);
-  font-size: 0.82rem;
-  font-weight: 900;
-  list-style: none;
-  cursor: pointer;
-}
-
-.clock-settings summary::-webkit-details-marker {
-  display: none;
-}
-
-.clock-settings[open] {
-  width: min(620px, 100%);
-}
-
-.clock-settings[open] summary {
-  margin-bottom: 8px;
-}
-
 .clock-controls {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.homework-box {
   min-width: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -1175,57 +1102,13 @@ h2 {
     padding: 20px;
   }
 
-  .study-clock-panel {
-    min-height: calc(100vh - 116px);
-  }
-
-  .study-clock {
-    min-height: calc(100vh - 166px);
-    padding: 22px;
-  }
-
-  .study-clock .lock-status {
-    font-size: 1rem;
-  }
-
-  .study-clock #clockOffset {
-    display: none;
-  }
-
   .lock-date {
     margin-top: 42px;
     font-size: 1.12rem;
   }
 
-  .study-clock .lock-date {
-    margin-top: auto;
-    font-size: clamp(1.24rem, 6vw, 2rem);
-  }
-
   .lock-time {
     font-size: 4.6rem;
-  }
-
-  .study-clock .lock-time {
-    font-size: clamp(4.4rem, 21vw, 6.4rem);
-  }
-
-  .study-clock .lock-tuotuo {
-    font-size: 0.92rem;
-  }
-
-  .clock-settings {
-    width: 100%;
-    justify-self: stretch;
-  }
-
-  .clock-settings summary {
-    margin-left: auto;
-    width: max-content;
-  }
-
-  .clock-settings[open] {
-    width: 100%;
   }
 
   .clock-city-time {
