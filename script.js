@@ -54,6 +54,9 @@ const els = {
   clockCitySelect: document.querySelector("#clockCitySelect"),
   addClockCity: document.querySelector("#addClockCity"),
   clockCityList: document.querySelector("#clockCityList"),
+  homeworkCount: document.querySelector("#homeworkCount"),
+  homeworkDate: document.querySelector("#homeworkDate"),
+  homeworkList: document.querySelector("#homeworkList"),
   groupGrid: document.querySelector("#groupGrid"),
   seasonTitle: document.querySelector("#seasonTitle"),
   seasonGrid: document.querySelector("#seasonGrid"),
@@ -573,6 +576,50 @@ function renderWorldClock() {
   });
 }
 
+function renderHomeworkPanel() {
+  if (!els.homeworkList) return;
+
+  const todayInfo = convertDate(getToday());
+  els.homeworkList.innerHTML = "";
+
+  if (todayInfo.leapExtra) {
+    els.homeworkCount.textContent = "0";
+    els.homeworkDate.textContent = `${todayInfo.year} 年 · 闰余日`;
+    const empty = document.createElement("div");
+    empty.className = "homework-empty";
+    empty.textContent = "今天是闰余日，暂无对应拖拖日程";
+    els.homeworkList.append(empty);
+    return;
+  }
+
+  const todayKey = dayKey(todayInfo.year, todayInfo.newDay);
+  const todayTasks = tasksForDayKey(todayKey).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  const start = dateFromDayOfYear(todayInfo.year, (todayInfo.newDay - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1);
+  const end = dateFromDayOfYear(todayInfo.year, todayInfo.newDay * GREGORIAN_DAYS_PER_NEW_DAY);
+
+  els.homeworkCount.textContent = String(todayTasks.length);
+  els.homeworkDate.textContent = `${formatTuotuoYear(todayInfo.year)} · 第 ${todayInfo.newDay} 日 · ${formatShort(start)}-${formatShort(end)}`;
+
+  if (!todayTasks.length) {
+    const empty = document.createElement("div");
+    empty.className = "homework-empty";
+    empty.textContent = "今天暂无日程";
+    els.homeworkList.append(empty);
+    return;
+  }
+
+  todayTasks.forEach((task) => {
+    const item = document.createElement("article");
+    item.className = "homework-task";
+    item.innerHTML = `
+      <strong>${escapeHtml(task.title)}</strong>
+      <span>${escapeHtml(summarizeTaskDates(task))}</span>
+      ${task.note ? `<span>${escapeHtml(task.note)}</span>` : ""}
+    `;
+    els.homeworkList.append(item);
+  });
+}
+
 function startWorldClock() {
   populateClockCitySelect();
   renderWorldClock();
@@ -664,6 +711,7 @@ function render() {
   renderGroups(info);
   renderSeasonGrid(info);
   renderYearGrid(info);
+  renderHomeworkPanel();
   if (taskEditor.open) renderTaskEditor();
 }
 
@@ -1149,6 +1197,12 @@ document.addEventListener("keydown", (event) => {
 
 window.addEventListener("hashchange", () => {
   setActiveView(getInitialView(), { updateHash: false });
+});
+
+window.addEventListener("storage", (event) => {
+  if (event.key !== TASK_STORAGE_KEY) return;
+  tasks = loadTasks();
+  render();
 });
 
 window.addEventListener("pageshow", () => {

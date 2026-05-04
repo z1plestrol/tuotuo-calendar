@@ -458,6 +458,60 @@ h2 {
   background: rgba(255, 255, 255, 0.74);
 }
 
+.homework-count {
+  display: inline-flex;
+  min-width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: var(--teal);
+  background: #edf5f1;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.homework-date {
+  margin: -2px 0 14px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.homework-list {
+  display: grid;
+  gap: 10px;
+}
+
+.homework-task,
+.homework-empty {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.homework-task strong {
+  display: block;
+  color: var(--ink);
+  font-size: 1.06rem;
+  line-height: 1.22;
+}
+
+.homework-task span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 760;
+  line-height: 1.35;
+}
+
+.homework-empty {
+  color: var(--muted);
+  font-weight: 800;
+}
+
 .clock-picker {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
