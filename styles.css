@@ -380,7 +380,13 @@ h2 {
 }
 
 .time-view .world-clock-panel {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-top: 12px;
+}
+
+.time-view .lock-clock,
+.time-view .homework-box {
+  min-height: 390px;
 }
 
 .lock-clock {
@@ -1084,6 +1090,15 @@ h2 {
     grid-template-columns: 1fr;
   }
 
+  .time-view .world-clock-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .time-view .lock-clock,
+  .time-view .homework-box {
+    min-height: 320px;
+  }
+
   .lock-date {
     font-size: 1.38rem;
   }
@@ -1154,6 +1169,11 @@ h2 {
   .lock-clock {
     min-height: 240px;
     padding: 20px;
+  }
+
+  .time-view .lock-clock,
+  .time-view .homework-box {
+    min-height: 240px;
   }
 
   .lock-date {
