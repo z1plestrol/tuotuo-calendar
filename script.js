@@ -50,12 +50,10 @@ const els = {
   clockOffset: document.querySelector("#clockOffset"),
   clockDate: document.querySelector("#clockDate"),
   clockTime: document.querySelector("#clockTime"),
-  clockTuotuo: document.querySelector("#clockTuotuo"),
   clockCitySelect: document.querySelector("#clockCitySelect"),
   addClockCity: document.querySelector("#addClockCity"),
   clockCityList: document.querySelector("#clockCityList"),
   homeworkCount: document.querySelector("#homeworkCount"),
-  homeworkDate: document.querySelector("#homeworkDate"),
   homeworkList: document.querySelector("#homeworkList"),
   groupGrid: document.querySelector("#groupGrid"),
   seasonTitle: document.querySelector("#seasonTitle"),
@@ -383,12 +381,6 @@ function formatClockTime(parts) {
   return `${parts.hour}:${parts.minute}`;
 }
 
-function formatClockTuotuo(parts) {
-  const info = convertDate(dateFromZonedParts(parts));
-  if (info.leapExtra) return `${formatTuotuoYear(info.year)} · 闰余日`;
-  return `${formatTuotuoYear(info.year)} · 第${info.newDay}日 · 第${info.phase}/5个公历日`;
-}
-
 function formatRelativeClockDate(parts) {
   const zonedDate = dateFromZonedParts(parts);
   const today = getToday();
@@ -536,7 +528,6 @@ function renderWorldClock() {
   els.clockOffset.textContent = formatOffset(activeCity.timeZone);
   els.clockDate.textContent = `${formatClockDate(activeParts)} · ${activeCity.country}`;
   els.clockTime.textContent = formatClockTime(activeParts);
-  els.clockTuotuo.textContent = formatClockTuotuo(activeParts);
 
   els.clockCityList.innerHTML = "";
   clockCityIds.forEach((cityId) => {
@@ -584,7 +575,6 @@ function renderHomeworkPanel() {
 
   if (todayInfo.leapExtra) {
     els.homeworkCount.textContent = "0";
-    els.homeworkDate.textContent = `${todayInfo.year} 年 · 闰余日`;
     const empty = document.createElement("div");
     empty.className = "homework-empty";
     empty.textContent = "今天是闰余日，暂无对应拖拖日程";
@@ -594,11 +584,8 @@ function renderHomeworkPanel() {
 
   const todayKey = dayKey(todayInfo.year, todayInfo.newDay);
   const todayTasks = tasksForDayKey(todayKey).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-  const start = dateFromDayOfYear(todayInfo.year, (todayInfo.newDay - 1) * GREGORIAN_DAYS_PER_NEW_DAY + 1);
-  const end = dateFromDayOfYear(todayInfo.year, todayInfo.newDay * GREGORIAN_DAYS_PER_NEW_DAY);
 
   els.homeworkCount.textContent = String(todayTasks.length);
-  els.homeworkDate.textContent = `${formatShort(start)}-${formatShort(end)}`;
 
   if (!todayTasks.length) {
     const empty = document.createElement("div");
